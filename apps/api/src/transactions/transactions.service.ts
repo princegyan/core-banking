@@ -9,6 +9,7 @@ import { SupabaseService } from '../database/supabase.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { CreateTransferDto } from './dto/create-transfer.dto';
+import { CreateReversalDto } from './dto/create-reversal.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -139,4 +140,32 @@ export class TransactionsService {
 
     return data;
   }
+async createReversal(
+  tenantId: string,
+  userId: string,
+  dto: CreateReversalDto,
+) {
+  const supabase =
+    this.supabaseService.getClient();
+
+  const { data, error } =
+    await supabase.rpc(
+      'execute_authorized_transaction_reversal',
+      {
+        p_tenant_id: tenantId,
+        p_transaction_id: dto.transactionId,
+        p_requested_by: userId,
+        p_comment: dto.reason,
+      },
+    );
+
+  if (error) {
+    const message =
+      error.message || 'Transaction reversal failed';
+
+    throw new BadRequestException(message);
+  }
+
+  return data;
+}
 }

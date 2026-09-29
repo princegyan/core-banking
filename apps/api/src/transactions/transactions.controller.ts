@@ -16,6 +16,7 @@ import { CreateDepositDto } from './dto/create-deposit.dto';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { TransactionsService } from './transactions.service';
+import { CreateReversalDto } from './dto/create-reversal.dto';
 
 @Controller()
 @UseGuards(
@@ -80,4 +81,21 @@ export class TransactionsController {
       dto,
     );
   }
+  @Post('reversals')
+@RequirePermissions(
+  'transactions.reverse',
+)
+async createReversal(
+  @CurrentUser()
+  user: AuthenticatedUser,
+
+  @Body()
+  dto: CreateReversalDto,
+) {
+  return this.transactionsService.createReversal(
+    user.tenantId,
+    user.id,
+    dto,
+  );
+}
 }
