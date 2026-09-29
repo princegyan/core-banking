@@ -8,6 +8,7 @@ import { SupabaseService } from '../database/supabase.service';
 
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
+import { CreateTransferDto } from './dto/create-transfer.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -80,6 +81,50 @@ export class TransactionsService {
     if (error) {
       const message =
         error.message || 'Withdrawal failed';
+
+      if (
+        message
+          .toLowerCase()
+          .includes('account not found')
+      ) {
+        throw new NotFoundException(message);
+      }
+
+      throw new BadRequestException(message);
+    }
+
+    return data;
+  }
+
+  async postTransfer(
+    tenantId: string,
+    userId: string,
+    dto: CreateTransferDto,
+  ) {
+    const supabase =
+      this.supabaseService.getClient();
+
+    const { data, error } =
+      await supabase.rpc(
+        'post_internal_transfer',
+        {
+          p_tenant_id: tenantId,
+          p_source_account_id:
+            dto.sourceAccountId,
+          p_destination_account_id:
+            dto.destinationAccountId,
+          p_amount: dto.amount,
+          p_description:
+            dto.description,
+          p_idempotency_key:
+            dto.idempotencyKey ?? null,
+          p_created_by: userId,
+        },
+      );
+
+    if (error) {
+      const message =
+        error.message || 'Transfer failed';
 
       if (
         message

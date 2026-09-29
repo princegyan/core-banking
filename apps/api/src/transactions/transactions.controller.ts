@@ -14,6 +14,7 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user';
 
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
+import { CreateTransferDto } from './dto/create-transfer.dto';
 import { TransactionsService } from './transactions.service';
 
 @Controller()
@@ -56,6 +57,24 @@ export class TransactionsController {
     dto: CreateWithdrawalDto,
   ) {
     return this.transactionsService.createWithdrawal(
+      user.tenantId,
+      user.id,
+      dto,
+    );
+  }
+
+  @Post('transfers')
+  @RequirePermissions(
+    'transactions.transfer',
+  )
+  async createTransfer(
+    @CurrentUser()
+    user: AuthenticatedUser,
+
+    @Body()
+    dto: CreateTransferDto,
+  ) {
+    return this.transactionsService.postTransfer(
       user.tenantId,
       user.id,
       dto,
