@@ -168,4 +168,72 @@ async createReversal(
 
   return data;
 }
+  async listTransactions(
+    tenantId: string,
+    page = 1,
+    limit = 20,
+  ) {
+    const supabase =
+      this.supabaseService.getClient();
+
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(
+      Math.max(1, limit),
+      100,
+    );
+
+    const from =
+      (safePage - 1) * safeLimit;
+
+    const to =
+      from + safeLimit - 1;
+
+    const {
+      data,
+      error,
+      count,
+    } = await supabase
+      .from('transactions')
+      .select(
+        `
+          id,
+          reference,
+          transaction_type,
+          status,
+          currency,
+          amount,
+          description,
+          channel,
+          value_date,
+          posted_at,
+          created_at,
+          created_by
+        `,
+        { count: 'exact' },
+      )
+      .eq('tenant_id', tenantId)
+      .order('created_at', {
+        ascending: false,
+      })
+      .range(from, to);
+
+    if (error) {
+      throw new BadRequestException(
+        error.message ||
+          'Failed to retrieve transactions',
+      );
+    }
+
+    return {
+      data,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total: count ?? 0,
+        totalPages: Math.ceil(
+          (count ?? 0) / safeLimit,
+        ),
+      },
+    };
+  }
 }

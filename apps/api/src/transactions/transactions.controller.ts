@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -98,4 +100,22 @@ async createReversal(
     dto,
   );
 }
+  @Get('transactions')
+  @RequirePermissions('transactions.read')
+  async listTransactions(
+    @CurrentUser()
+    user: AuthenticatedUser,
+
+    @Query('page')
+    page?: string,
+
+    @Query('limit')
+    limit?: string,
+  ) {
+    return this.transactionsService.listTransactions(
+      user.tenantId,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+    );
+  }
 }
